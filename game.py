@@ -6,6 +6,7 @@
 import time
 from math import sqrt
 import argparse
+import random
 
 # Node class
 class Node:
@@ -166,33 +167,82 @@ def print_solution(node, number_of_moves):
 
 
 
+def get_number_of_moves(node):
+    if node.parent is not None:
+        number_of_moves = get_number_of_moves(node.parent)
+    else:
+        return 0
+
+    return number_of_moves + 1
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-l", "--layout", help="The layout of the board as a list of comma separated values. Ex. 1,2,0,3")
+    parser.add_argument("--demo", help="Demo mode, outputs random board layouts and the number of moves it takes to solve them", action="store_true")
     args = parser.parse_args()
     
     if args.layout is not None:
         initial_layout = args.layout
     else:
-        #initial_layout = "312045678" # 1 move
-        #initial_layout = "312645078" # 2 moves
-        #initial_layout = "3,1,2,6,4,5,7,0,8" # 3 moves
+        # 3x3 layout                          Moves
+        initial_layout = "3,1,2,0,4,5,6,7,8" # 1
+        #initial_layout = "3,1,2,6,4,5,0,7,8" # 2
+        #initial_layout = "3,1,2,6,4,5,7,0,8" # 3
+        #initial_layout = "3,1,5,2,7,4,0,6,8" # 10
+        #initial_layout = "7,3,1,6,8,2,0,4,5" # 16
+        #initial_layout = "1,2,7,6,5,3,8,0,4" # 17
+        #initial_layout = "3,2,1,6,0,8,5,7,4" # 18
+        #initial_layout = "2,4,5,1,7,0,6,3,8" # 19
+        #initial_layout = "0,5,7,1,6,4,8,2,3" # 20
+        #initial_layout = "7,6,1,8,4,0,5,3,2" # 21
+        #initial_layout = "5,7,2,3,8,6,1,4,0" # 22
+        #initial_layout = "2,4,8,3,7,0,5,6,1" # 23
+        #initial_layout = "6,5,7,8,2,4,0,1,3" # 24
+        #initial_layout = "4,0,3,2,1,6,8,7,5" # 25
+        #initial_layout = "2,3,0,7,8,4,5,1,6" # 26
+        #initial_layout = "8,0,4,6,1,7,2,5,3" # 27
+       
+        # 4x4 layout
         #initial_layout = "4,1,2,3,0,5,6,7,8,9,10,11,12,13,14,15"
         #initial_layout = "11,15,9,3,14,8,12,7,6,10,0,2,13,4,5,1"
-        initial_layout = "1,7,0,2,6,4,3,8,5"
 
-    
+
     # Start the timer
     start_time = time.time()
-
+    
     # Run the breadth first search algorithm
     goal_node = bfs(Node(GameBoard(initial_layout), None))
-    
+        
     # End the timer
     time_elapsed = time.time() - start_time
     print("Time Taken: " + str(time_elapsed))
 
     print_solution(goal_node, 0)
+
+    # Run demo mode
+    if args.demo:
+        layouts_dict = dict() # key: number of moves, value: layout string
+
+        
+        while True:
+            layout_choices = '012345678'
+            initial_layout = ""
+            
+            while len(layout_choices) > 0:
+                chosen = random.choice(layout_choices)
+                initial_layout = initial_layout + chosen + ','
+                layout_choices = layout_choices.replace(chosen, '')
+            initial_layout = initial_layout[:-1]
+
+            goal_node = bfs(Node(GameBoard(initial_layout), None))
+   
+            if goal_node is not None:        
+                number_of_moves = get_number_of_moves(goal_node)
+
+                if number_of_moves not in layouts_dict:
+                    layouts_dict[number_of_moves] = initial_layout
+                    print(str(number_of_moves) + " moves: " + initial_layout)
 
 
 
