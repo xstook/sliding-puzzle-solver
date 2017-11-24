@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 
+# Author: Michael Santoro
+# Start Date: November 23, 2017
+
 import time
 from math import sqrt
 import argparse
