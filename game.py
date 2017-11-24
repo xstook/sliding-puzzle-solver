@@ -214,7 +214,6 @@ def main():
     # Run demo mode
     if args.demo:
         layouts_dict = dict() # key: number of moves, value: layout string
-
         
         while True:
             layout_choices = '012345678'
@@ -233,7 +232,11 @@ def main():
 
                 if number_of_moves not in layouts_dict:
                     layouts_dict[number_of_moves] = initial_layout
-                    print(str(number_of_moves) + " moves: " + initial_layout)
+                    output = str(number_of_moves) + " moves: " + initial_layout
+                    print(output)
+                    f = open("demo_output.txt", 'a')
+                    f.write(output + "\n")
+                    f.close()
 
     else:
         # Start the timer
