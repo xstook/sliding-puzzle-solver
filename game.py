@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+import time
+from math import sqrt
 
 # Node class
 class Node:
@@ -15,9 +17,9 @@ class Node:
 # Game Board class
 class GameBoard:
     def __init__(self, _layout, _width):
-        self.layout = _layout # should be in the list form [0,1,2,3,4,5,6,7,8]
-        self.width = _width # should be a number such as 3, for a 3x3 square
-        self.index = self.layout.index("0")
+        self.layout = _layout # should be in the form "0,1,2,3,4,5,6,7,8"
+        self.width = _width # should be a number such as 3, for a 3x3 square 
+        self.index = self.layout.split(",").index("0")
 
     def can_move_up(self):
         if self.index >= self.width:
@@ -44,49 +46,51 @@ class GameBoard:
             return False
 
     def move_up(self):
-        new_layout_list = list(self.layout)
+        new_layout_list = self.layout.split(",")
         new_layout_list[self.index] = new_layout_list[self.index - self.width]
         new_layout_list[self.index - self.width] = "0"
 
-        return GameBoard("".join(new_layout_list), self.width)
+        return GameBoard(",".join(new_layout_list), self.width)
 
     def move_down(self):
-        new_layout_list = list(self.layout)
+        new_layout_list = self.layout.split(",")
         new_layout_list[self.index] = new_layout_list[self.index + self.width]
         new_layout_list[self.index + self.width] = "0"
 
-        return GameBoard("".join(new_layout_list), self.width)
+        return GameBoard(",".join(new_layout_list), self.width)
 
     def move_left(self):
-        new_layout_list = list(self.layout)
+        new_layout_list = self.layout.split(",")
         new_layout_list[self.index] = new_layout_list[self.index - 1]
         new_layout_list[self.index - 1] = "0"
 
-        return GameBoard("".join(new_layout_list), self.width)
+        return GameBoard(",".join(new_layout_list), self.width)
 
     def move_right(self):
-        new_layout_list = list(self.layout)
+        new_layout_list = self.layout.split(",")
         new_layout_list[self.index] = new_layout_list[self.index + 1]
         new_layout_list[self.index + 1] = "0"
 
-        return GameBoard("".join(new_layout_list), self.width)
+        return GameBoard(",".join(new_layout_list), self.width)
     
     def is_goal(self):
         is_goal_flag = True
         
         for x in range(0, self.width * self.width):
-            if self.layout[x] != str(x):
+            if self.layout.split(",")[x] != str(x):
                 is_goal_flag = False
         
         return is_goal_flag
 
     def print_layout(self):
+        print "--------" * self.width
         for x in range(0, self.width * self.width):
-            print self.layout[x],
+            print self.layout.split(",")[x] + "\t",
             if (x + 1) % self.width == 0:
-                print "\n",
-         
-        print "\n",
+                print "\n\n",
+        
+        print "--------" * self.width
+        print "\n\n",
     
     def __eq__(self, other):
         return self.layout == other.layout
@@ -144,9 +148,12 @@ def bfs(initial_node):
 
 
 
-def print_solution(node):
+def print_solution(node, number_of_moves):
     if node.parent is not None:
-        print_solution(node.parent)
+        print_solution(node.parent, number_of_moves + 1)
+    else:
+        print("Solution found in " + str(number_of_moves) + " moves")
+
     node.data.print_layout()
 
 
@@ -160,18 +167,32 @@ def main():
     3 1 2
     6 4 5
     0 7 8
+
+    0  1  2  3
+    4  5  6  7
+    8  9  10 11
+    12 13 14 15
     '''
     # Game Settings
     #initial_layout = "312045678" # 1 move
     #initial_layout = "312645078" # 2 moves
-    initial_layout = "312645708" # 3 moves
-    board_width = 3
+    initial_layout = "3,1,2,6,4,5,7,0,8" # 3 moves
+    #initial_layout = "4,1,2,3,0,5,6,7,8,9,10,11,12,13,14,15"
+    #initial_layout = "11,15,9,3,14,8,12,7,6,10,0,2,13,4,5,1"
+    board_width = int(sqrt(len(initial_layout.split(","))))
+    
+    # Start the timer
+    start_time = time.time()
 
     # Run the breadth first search algorithm
     goal_node = bfs(Node(GameBoard(initial_layout, board_width), None))
     
+    # End the timer
+    time_elapsed = time.time() - start_time
+    print("Time Taken:")
+    print(time_elapsed)
 
-    print_solution(goal_node)
+    print_solution(goal_node, 0)
 
 
 
