@@ -213,6 +213,11 @@ def main():
 
     # Run demo mode
     if args.demo:
+        # Clear the contents of the output file
+        output_file_name = "demo_output.txt"
+        f = open(output_file_name, 'w')
+        f.close()
+
         layouts_dict = dict() # key: number of moves, value: layout string
         
         while True:
@@ -234,7 +239,7 @@ def main():
                     layouts_dict[number_of_moves] = initial_layout
                     output = str(number_of_moves) + " moves: " + initial_layout
                     print(output)
-                    f = open("demo_output.txt", 'a')
+                    f = open(output_file_name, 'a')
                     f.write(output + "\n")
                     f.close()
 
