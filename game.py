@@ -101,23 +101,26 @@ class GameBoard:
 
 def bfs(initial_node):
     # Check if initial state is the goal state
-        # Return a solution found
     if initial_node.data.is_goal():
-        return []
+        return None
 
-    frontier = [] # queue 
-    explored = []
+    # These are supposed to be queue's but I use a hashmap (dict) for speed
+    frontier = dict() # key: layout string, value: node 
+    frontier_list = []
+    explored = dict()
     
     # push the initial state onto the frontier
-    frontier.append(initial_node)
-
+    frontier[initial_node.data.layout] = initial_node
+    frontier_list.append(initial_node)
+    
     # Run while the froniter is not empty
-    while len(frontier) > 0:
+    while len(frontier_list) > 0:
         # remove the next item off the frontier
-        node = frontier.pop(0)
+        node = frontier_list.pop(0)
+        del frontier[node.data.layout]
 
         # Add it onto the explored set
-        explored.append(node)
+        explored[node.data.layout] = node
 
         # populate the children nodes
         if node.data.can_move_up():
@@ -135,17 +138,18 @@ def bfs(initial_node):
         # For each child of this node
         for child in node.children:
             # If they are not already in either the explored or frontier sets
-            if child not in explored and child not in frontier:
+            if child.data.layout not in explored and child.data.layout not in frontier:
                 # Test for the goal state
                 if child.data.is_goal():
                     return child
 
                 # Push the child node onto the frontier
-                frontier.append(child)
+                frontier[child.data.layout] = child
+                frontier_list.append(child)
 
 
     # Return no solution found
-    return []
+    return None
 
 
 
@@ -163,21 +167,6 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-l", "--layout", help="The layout of the board as a list of comma separated values. Ex. 1,2,0,3")
     args = parser.parse_args()
-
-    '''
-    0 1 2
-    3 4 5
-    6 7 8
-
-    3 1 2
-    6 4 5
-    0 7 8
-
-    0  1  2  3
-    4  5  6  7
-    8  9  10 11
-    12 13 14 15
-    '''
     
     if args.layout is not None:
         initial_layout = args.layout
@@ -198,8 +187,7 @@ def main():
     
     # End the timer
     time_elapsed = time.time() - start_time
-    print("Time Taken:")
-    print(time_elapsed)
+    print("Time Taken: " + str(time_elapsed))
 
     print_solution(goal_node, 0)
 
