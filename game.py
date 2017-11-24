@@ -218,8 +218,8 @@ def main():
 
         # Run indefinitely
         while True:
-            #layout_choices = '012345678'
-            layout_choices = '0123'
+            layout_choices = '012345678'
+            #layout_choices = '0123'
             initial_layout = ""
             
             # Generate initial layout
