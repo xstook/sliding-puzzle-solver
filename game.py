@@ -213,31 +213,47 @@ def main():
 
     # Run demo mode
     if args.demo:
-        layouts_dict = dict() # key: number of moves, value: layout string
-        
+        final_layouts = dict() # key: number of moves, value: layout string
+        checked_layouts = dict() # key: layout string, value: None
+
+        # Run indefinitely
         while True:
-            layout_choices = '012345678'
+            #layout_choices = '012345678'
+            layout_choices = '0123'
             initial_layout = ""
             
+            # Generate initial layout
             while len(layout_choices) > 0:
                 chosen = random.choice(layout_choices)
                 initial_layout = initial_layout + chosen + ','
                 layout_choices = layout_choices.replace(chosen, '')
+            
             initial_layout = initial_layout[:-1]
 
-            goal_node = bfs(Node(GameBoard(initial_layout), None))
+            if initial_layout not in checked_layouts:
+                checked_layouts[initial_layout] = None
+
+                # Search for a solution
+                goal_node = bfs(Node(GameBoard(initial_layout), None))
    
-            if goal_node is not None:        
-                number_of_moves = get_number_of_moves(goal_node)
+                # If a solution is found
+                if goal_node is not None:        
+                    number_of_moves = get_number_of_moves(goal_node)
 
-                if number_of_moves not in layouts_dict:
-                    layouts_dict[number_of_moves] = initial_layout
-                    output = str(number_of_moves) + " moves: " + initial_layout
-                    print(output)
-                    f = open("demo_output.txt", 'a')
-                    f.write(output + "\n")
-                    f.close()
-
+                    if number_of_moves not in final_layouts:
+                        final_layouts[number_of_moves] = initial_layout
+                        
+                        final_layout_keys_sorted = final_layouts.keys()
+                        final_layout_keys_sorted.sort()
+                        output = str(len(final_layout_keys_sorted)) + " layouts found\n"
+                        for key in final_layout_keys_sorted:
+                            output = output + str(key) + " moves: " + final_layouts[key] + "\n"
+                        print(output)
+                        f = open("demo_output.txt", 'w')
+                        f.write(output)
+                        f.close()
+    
+    # Normal mode
     else:
         # Start the timer
         start_time = time.time()
