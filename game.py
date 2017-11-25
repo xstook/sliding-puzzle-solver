@@ -188,6 +188,11 @@ def main():
     #initial_layout = "3,1,2,6,4,5,0,7,8" # 2
     #initial_layout = "3,1,2,6,4,5,7,0,8" # 3
     #initial_layout = "3,1,5,2,7,4,0,6,8" # 10
+    #initial_layout = "4,5,3,1,2,0,6,7,8" # 11
+    #initial_layout = "0,7,4,1,8,2,3,6,5" # 12
+    #initial_layout = "6,1,2,7,4,0,3,8,5" # 13
+    #initial_layout = "1,5,0,6,2,7,8,3,4" # 14
+    #initial_layout = "3,5,4,2,8,0,6,1,7" # 15
     #initial_layout = "7,3,1,6,8,2,0,4,5" # 16
     #initial_layout = "1,2,7,6,5,3,8,0,4" # 17
     #initial_layout = "3,2,1,6,0,8,5,7,4" # 18
@@ -200,6 +205,9 @@ def main():
     #initial_layout = "4,0,3,2,1,6,8,7,5" # 25
     #initial_layout = "2,3,0,7,8,4,5,1,6" # 26
     #initial_layout = "8,0,4,6,1,7,2,5,3" # 27
+    #initial_layout = "1,8,0,4,7,6,2,5,3" # 28
+    #initial_layout = "3,0,4,1,6,7,2,5,8" # 29
+    #initial_layout = "2,7,1,5,4,3,8,6,0" # 30
     
     # 4x4 layout
     #initial_layout = "4,1,2,3,0,5,6,7,8,9,10,11,12,13,14,15"
