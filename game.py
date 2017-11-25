@@ -176,10 +176,28 @@ def get_number_of_moves(node):
     return number_of_moves + 1
 
 
+all_permutations = []
+def get_permutations(a, l, r):
+    global all_permutations
+
+    if l == r:
+        #print "".join(a)
+        all_permutations.append(",".join(a))
+    else:
+        for i in xrange(l, r + 1):
+            a[l], a[i] = a[i], a[l]
+            get_permutations(a, l + 1, r)
+            a[l], a[i] = a[i], a[l]
+
+
+
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-l", "--layout", help="The layout of the board as a list of comma separated values. Ex. 1,2,0,3")
     parser.add_argument("--demo", help="Demo mode, outputs random board layouts and the number of moves it takes to solve them", action="store_true")
+    parser.add_argument("--demo2", help="Demo mode, outputs all possible permutations of the board layout", action="store_true")
     args = parser.parse_args()
     
     
@@ -260,7 +278,34 @@ def main():
                         f = open("demo_output.txt", 'w')
                         f.write(output)
                         f.close()
-    
+
+    # Demo 2 mode
+    elif args.demo2:
+        # Find all permutations of the board layout
+        layout_choices = "012345678"
+        n = len(layout_choices)
+        a = list(layout_choices)
+        get_permutations(a, 0, n - 1)
+        #print len(all_permutations)
+
+        f = open("demo2_output.txt", 'w')
+        f.close()
+
+        for layout in all_permutations:
+            goal_node = bfs(Node(GameBoard(layout), None))
+            number_of_moves = 0
+
+            # If a solution is found
+            if goal_node is not None:        
+                number_of_moves = get_number_of_moves(goal_node)
+            
+            output = str(number_of_moves) + ":" + layout
+            f = open("demo2_output.txt", 'a')
+            f.write(output + "\n")
+            f.close()
+            print(output)
+
+
     # Normal mode
     else:
         # Start the timer
