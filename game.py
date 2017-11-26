@@ -310,6 +310,7 @@ def main():
         #layout = "2,7,1,5,4,3,8,6,0" # Takes 30 moves to solve
         layout = "0,5,7,1,6,4,8,2,3" # Takes 20 moves to solve
         runs = 10
+
         times_taken = []
         for x in range(0, runs):
             start_time = time.time()
@@ -317,12 +318,13 @@ def main():
             goal_node = bfs(Node(GameBoard(layout), None))
 
             times_taken.append(time.time() - start_time)
-            print(times_taken[x])
+            print(str(int((x + 1) * 1.0 / runs * 100)) + "% complete")
+
         times_average = 0
         for time_taken in times_taken:
             times_average = times_average + time_taken
 
-        print("Average time in seconds: " + str(times_average / runs))
+        print("Score: " + str(int(1 / (times_average / runs) * 10000)))
 
     # Normal mode
     else:
