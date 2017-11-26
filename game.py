@@ -198,6 +198,7 @@ def main():
     parser.add_argument("-l", "--layout", help="The layout of the board as a list of comma separated values. Ex. 1,2,0,3")
     parser.add_argument("--demo", help="Demo mode, outputs random board layouts and the number of moves it takes to solve them", action="store_true")
     parser.add_argument("--demo2", help="Demo mode, outputs all possible permutations of the board layout", action="store_true")
+    parser.add_argument("-b", "--benchmark", help="Runs a benchmark and outputs the average time taken. This can be used to compare different CPUs", action="store_true")
     args = parser.parse_args()
     
     
@@ -305,6 +306,23 @@ def main():
             f.close()
             print(output)
 
+    elif args.benchmark:
+        #layout = "2,7,1,5,4,3,8,6,0" # Takes 30 moves to solve
+        layout = "0,5,7,1,6,4,8,2,3" # Takes 20 moves to solve
+        runs = 10
+        times_taken = []
+        for x in range(0, runs):
+            start_time = time.time()
+
+            goal_node = bfs(Node(GameBoard(layout), None))
+
+            times_taken.append(time.time() - start_time)
+            print(times_taken[x])
+        times_average = 0
+        for time_taken in times_taken:
+            times_average = times_average + time_taken
+
+        print("Average time in seconds: " + str(times_average / runs))
 
     # Normal mode
     else:
