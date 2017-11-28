@@ -7,6 +7,7 @@ import time
 from math import sqrt
 import argparse
 import random
+from multiprocessing import Process
 
 # Node class
 class Node:
@@ -329,7 +330,13 @@ def main():
         for x in range(0, runs):
             start_time = time.time()
 
-            goal_node = bfs(Node(GameBoard(layout), None))
+            # Multiprocess function call of bfs()
+            p = Process(target=bfs, args=(Node(GameBoard(layout),None),))
+            p.start()
+            p.join()
+            
+            # Pre multiprocess function call
+            #goal_node = bfs(Node(GameBoard(layout), None))
 
             times_taken.append(time.time() - start_time)
             print(str(int((x + 1) * 1.0 / runs * 100)) + "% complete")
