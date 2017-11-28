@@ -284,14 +284,19 @@ def main():
     elif args.demo2:
         # Find all permutations of the board layout
         layout_choices = "012345678"
+        #layout_choices = "0123"
         n = len(layout_choices)
         a = list(layout_choices)
         get_permutations(a, 0, n - 1)
+        all_permutations_count = len(all_permutations)
         #print len(all_permutations)
 
         f = open("demo2_output.txt", 'w')
         f.close()
 
+        stats = dict()
+
+        layout_count = 1
         for layout in all_permutations:
             goal_node = bfs(Node(GameBoard(layout), None))
             number_of_moves = 0
@@ -304,12 +309,21 @@ def main():
             f = open("demo2_output.txt", 'a')
             f.write(output + "\n")
             f.close()
-            print(output)
+            print("[" + str(layout_count) + " of " + str(all_permutations_count) + "] " + str(number_of_moves) + " moves to solve " + layout)
+            layout_count = layout_count + 1
+            if number_of_moves in stats:
+                stats[number_of_moves] = stats[number_of_moves] + 1
+            else:
+                stats[number_of_moves] = 1.0
+        
+        # Print the statistics
+        for key in stats:
+            print(str(key) + " moves: " + str(int(stats[key] / all_permutations_count * 100)) + "%")
 
     elif args.benchmark:
         #layout = "2,7,1,5,4,3,8,6,0" # Takes 30 moves to solve
         layout = "0,5,7,1,6,4,8,2,3" # Takes 20 moves to solve
-        runs = 10
+        runs = 20
 
         times_taken = []
         for x in range(0, runs):
