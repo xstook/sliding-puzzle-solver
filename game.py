@@ -199,6 +199,8 @@ def main():
     parser.add_argument("-l", "--layout", help="The layout of the board as a list of comma separated values. Ex. 1,2,0,3")
     parser.add_argument("--demo", help="Demo mode, outputs random board layouts and the number of moves it takes to solve them", action="store_true")
     parser.add_argument("--demo2", help="Demo mode, outputs all possible permutations of the board layout", action="store_true")
+    parser.add_argument("--demo3", help="Demo mode, outputs all possible permutations of the board layout", action="store_true")
+
     parser.add_argument("-b", "--benchmark", help="Runs a benchmark and outputs the average time taken. This can be used to compare different CPUs", action="store_true")
     args = parser.parse_args()
     
@@ -321,31 +323,48 @@ def main():
         for key in stats:
             print(str(key) + " moves: " + str(int(stats[key] / all_permutations_count * 100)) + "%")
 
+
+
+    elif args.demo3:
+        layout = "1,2,7,6,5,3,8,0,4" # 17 
+        
+        ps = []
+        start_time = time.time()
+        for x in range(8):
+            #ps.append(Process(target=bfs, args=(Node(GameBoard(layout), None),)))
+            p = Process(target=bfs, args=(Node(GameBoard(layout), None),))
+            p.start()
+            p.join()
+        '''
+        for p in ps:
+            p.start()
+
+        for p in ps:
+            p.join()
+        '''
+        print("Time Elapsed: " + str(time.time() - start_time))
+
+
+
     elif args.benchmark:
         #layout = "2,7,1,5,4,3,8,6,0" # Takes 30 moves to solve
         layout = "0,5,7,1,6,4,8,2,3" # Takes 20 moves to solve
         runs = 20
 
-        times_taken = []
-        for x in range(0, runs):
-            start_time = time.time()
+        processes = []
 
-            # Multiprocess function call of bfs()
-            p = Process(target=bfs, args=(Node(GameBoard(layout),None),))
+        start_time = time.time()
+        for x in range(runs):
+            processes.append(Process(target=bfs, args=(Node(GameBoard(layout),None),)))
+        
+        for p in processes:
             p.start()
+        
+        for p in processes:
             p.join()
-            
-            # Pre multiprocess function call
-            #goal_node = bfs(Node(GameBoard(layout), None))
-
-            times_taken.append(time.time() - start_time)
-            print(str(int((x + 1) * 1.0 / runs * 100)) + "% complete")
-
-        times_average = 0
-        for time_taken in times_taken:
-            times_average = times_average + time_taken
-
-        print("Score: " + str(int(1 / (times_average / runs) * 10000)))
+        
+     
+        print("Score: " + str(int(1 / ((time.time() - start_time) / runs) * 10000)))
 
     # Normal mode
     else:
