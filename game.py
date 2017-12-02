@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Author: Michael Santoro
 # Start Date: November 23, 2017
@@ -7,7 +7,9 @@ import time
 from math import sqrt
 import argparse
 import random
-from multiprocessing import Process
+import multiprocessing as mp
+from multiprocessing import Process, Queue, Pool
+from sys import stdout
 
 # Node class
 class Node:
@@ -78,29 +80,29 @@ class GameBoard:
         new_layout_list[self.index + 1] = "0"
 
         return GameBoard(",".join(new_layout_list))
-    
+
     def is_goal(self):
         is_goal_flag = True
-        
+
         for x in range(0, self.width * self.width):
             if self.layout.split(",")[x] != str(x):
                 is_goal_flag = False
-        
+
         return is_goal_flag
 
     def print_layout(self):
-        print "--------" * self.width
+        print("--------" * self.width)
         for x in range(0, self.width * self.width):
-            print self.layout.split(",")[x] + "\t",
+            print(self.layout.split(",")[x] + "\t", end='')
             if (x + 1) % self.width == 0:
-                print "\n\n",
-        
-        print "--------" * self.width
-        print "\n\n",
-    
+                print("\n\n", end='')
+
+        print("--------" * self.width)
+        print("\n\n", end='')
+
     def __eq__(self, other):
         return self.layout == other.layout
-        
+
 
 
 
@@ -110,14 +112,14 @@ def bfs(initial_node):
         return None
 
     # These are supposed to be queue's but I use a hashmap (dict) for speed
-    frontier = dict() # key: layout string, value: node 
+    frontier = dict() # key: layout string, value: node
     frontier_list = []
     explored = dict()
-    
+
     # push the initial state onto the frontier
     frontier[initial_node.data.layout] = initial_node
     frontier_list.append(initial_node)
-    
+
     # Run while the froniter is not empty
     while len(frontier_list) > 0:
         # remove the next item off the frontier
@@ -133,13 +135,13 @@ def bfs(initial_node):
 
         if node.data.can_move_down():
             node.children.append(Node(node.data.move_down(), node))
-        
+
         if node.data.can_move_left():
             node.children.append(Node(node.data.move_left(), node))
-        
+
         if node.data.can_move_right():
             node.children.append(Node(node.data.move_right(), node))
-        
+
         # For each child of this node
         for child in node.children:
             # If they are not already in either the explored or frontier sets
@@ -185,11 +187,30 @@ def get_permutations(a, l, r):
         #print "".join(a)
         all_permutations.append(",".join(a))
     else:
-        for i in xrange(l, r + 1):
+        for i in range(l, r + 1):
             a[l], a[i] = a[i], a[l]
             get_permutations(a, l + 1, r)
             a[l], a[i] = a[i], a[l]
 
+
+def run_demo2mp(layout, layout_count, all_permutations_count, process_queue):
+    goal_node = bfs(Node(GameBoard(layout), None))
+    number_of_moves = 0
+
+    # If a solution is found
+    if goal_node is not None:        
+        number_of_moves = get_number_of_moves(goal_node)
+
+    process_queue.put('q')
+
+    #print("[" + str(layout_count) + " of " + str(all_permutations_count) + "] " + str(number_of_moves) + " moves to solve " + layout)
+    print("[" + str(process_queue.qsize()) + " of " + str(all_permutations_count) + "] " + str(number_of_moves) + " moves to solve " + layout)
+    
+
+def run_benchmarkmp(layout):
+    bfs(Node(GameBoard(layout),None))
+    #process_queue.put('q')
+    #print 1.0 * process_queue.qsize() / runs * 100,
 
 
 
@@ -199,9 +220,10 @@ def main():
     parser.add_argument("-l", "--layout", help="The layout of the board as a list of comma separated values. Ex. 1,2,0,3")
     parser.add_argument("--demo", help="Demo mode, outputs random board layouts and the number of moves it takes to solve them", action="store_true")
     parser.add_argument("--demo2", help="Demo mode, outputs all possible permutations of the board layout", action="store_true")
+    parser.add_argument("--demo2mp", help="Demo mode, outputs all possible permutations of the board layout", action="store_true")
     parser.add_argument("--demo3", help="Demo mode, outputs all possible permutations of the board layout", action="store_true")
-
     parser.add_argument("-b", "--benchmark", help="Runs a benchmark and outputs the average time taken. This can be used to compare different CPUs", action="store_true")
+    parser.add_argument("-bmp", "--benchmarkmp", help="Runs a benchmark and outputs the average time taken. This can be used to compare different CPUs", action="store_true")
     args = parser.parse_args()
     
     
@@ -293,12 +315,13 @@ def main():
         get_permutations(a, 0, n - 1)
         all_permutations_count = len(all_permutations)
         #print len(all_permutations)
-
+        
         f = open("demo2_output.txt", 'w')
         f.close()
 
         stats = dict()
 
+        process_queue = Queue()
         layout_count = 1
         for layout in all_permutations:
             goal_node = bfs(Node(GameBoard(layout), None))
@@ -324,6 +347,30 @@ def main():
             print(str(key) + " moves: " + str(int(stats[key] / all_permutations_count * 100)) + "%")
 
 
+    # Demo 2 in Multiprocess mode
+    elif args.demo2mp:
+        layout_choices = "012345678"
+        #layout_choices = "0123"
+        n = len(layout_choices)
+        a = list(layout_choices)
+        get_permutations(a, 0, n - 1)
+        all_permutations_count = len(all_permutations)
+
+        stats = dict()
+
+        processes = []
+        process_queue = Queue()
+        layout_count = 1
+        for layout in all_permutations:
+            processes.append(Process(target=run_demo2mp, args=(layout, layout_count, all_permutations_count, process_queue), maxtasksperchild=100))
+            layout_count = layout_count + 1
+    
+        for p in processes:
+            p.start()
+        
+        for p in processes:
+            p.join()
+
 
     elif args.demo3:
         layout = "1,2,7,6,5,3,8,0,4" # 17 
@@ -345,26 +392,57 @@ def main():
         print("Time Elapsed: " + str(time.time() - start_time))
 
 
-
     elif args.benchmark:
+        print("=== Starting Benchmark ===")
         #layout = "2,7,1,5,4,3,8,6,0" # Takes 30 moves to solve
         layout = "0,5,7,1,6,4,8,2,3" # Takes 20 moves to solve
-        runs = 20
-
-        processes = []
+        runs = 200
 
         start_time = time.time()
         for x in range(runs):
-            processes.append(Process(target=bfs, args=(Node(GameBoard(layout),None),)))
+            bfs(Node(GameBoard(layout),None),)
+            print(1.0 * x / runs * 100, end='')
+            print("%")
+
+
+        print("\n=== Benchmark Complete ===")
+        time_elapsed = time.time() - start_time
+        print("Runs: " + str(runs))
+        print("Seconds Elapsed: " + str(round(time_elapsed, 2)))
+        print("Score: " + str(int(1 / (time_elapsed / runs) * 10000)))
+
+
+    elif args.benchmarkmp:
+        print("=== Running BenchmarkMP ===")
+        #layout = "2,7,1,5,4,3,8,6," # Takes 30 moves to solve
+        layout = "0,5,7,1,6,4,8,2,3" # Takes 20 moves to solve
+        runs = 64
+
+        layout_list = []
+        for x in range(runs):
+            layout_list.append(layout)
+
+        start_time = time.time()
+
+        process_pool = Pool(processes=mp.cpu_count())
+        process_results = [process_pool.apply_async(run_benchmarkmp, args=(layout,)) for layout in layout_list]
+
+        count = 1
+        for p in process_results:
+            p.get()
+            percent_done = int(round(100.0 * count / runs))
+            scale = 4
+            bars_to_draw = int((percent_done / 10) * scale)
+            spaces_to_draw = (10 * scale) - bars_to_draw
+            print("\r" + str(percent_done) + "%  [" + ("=" * bars_to_draw) + (' ' * spaces_to_draw) + "]    ", end='')
+            count = count + 1
+
+        time_elapsed = time.time() - start_time
+        print("\n\n=== BenchmarkMP Results ===")
+        print("SCORE:\t\t" + str(int(1 / (time_elapsed / runs) * 10000)))
+        print("Time (s):\t" + str(round(time_elapsed, 2)))
+        print("Runs:\t\t" + str(runs))
         
-        for p in processes:
-            p.start()
-        
-        for p in processes:
-            p.join()
-        
-     
-        print("Score: " + str(int(1 / ((time.time() - start_time) / runs) * 10000)))
 
     # Normal mode
     else:
@@ -378,7 +456,7 @@ def main():
         time_elapsed = time.time() - start_time
         print("Time Taken: " + str(time_elapsed))
         
-	if goal_node is not None:
+        if goal_node is not None:
             print_solution(goal_node, 0)
 
 
