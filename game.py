@@ -193,7 +193,7 @@ def get_permutations(a, l, r):
             a[l], a[i] = a[i], a[l]
 
 
-def run_demo2mp(layout, layout_count, all_permutations_count, process_queue):
+def run_demo2mp(layout):
     goal_node = bfs(Node(GameBoard(layout), None))
     number_of_moves = 0
 
@@ -201,11 +201,8 @@ def run_demo2mp(layout, layout_count, all_permutations_count, process_queue):
     if goal_node is not None:        
         number_of_moves = get_number_of_moves(goal_node)
 
-    process_queue.put('q')
+    return number_of_moves
 
-    #print("[" + str(layout_count) + " of " + str(all_permutations_count) + "] " + str(number_of_moves) + " moves to solve " + layout)
-    print("[" + str(process_queue.qsize()) + " of " + str(all_permutations_count) + "] " + str(number_of_moves) + " moves to solve " + layout)
-    
 
 def run_benchmarkmp(layout):
     bfs(Node(GameBoard(layout),None))
@@ -221,7 +218,6 @@ def main():
     parser.add_argument("--demo", help="Demo mode, outputs random board layouts and the number of moves it takes to solve them", action="store_true")
     parser.add_argument("--demo2", help="Demo mode, outputs all possible permutations of the board layout", action="store_true")
     parser.add_argument("--demo2mp", help="Demo mode, outputs all possible permutations of the board layout", action="store_true")
-    parser.add_argument("--demo3", help="Demo mode, outputs all possible permutations of the board layout", action="store_true")
     parser.add_argument("-b", "--benchmark", help="Runs a benchmark and outputs the average time taken. This can be used to compare different CPUs", action="store_true")
     parser.add_argument("-bmp", "--benchmarkmp", help="Runs a benchmark and outputs the average time taken. This can be used to compare different CPUs", action="store_true")
     args = parser.parse_args()
@@ -349,6 +345,7 @@ def main():
 
     # Demo 2 in Multiprocess mode
     elif args.demo2mp:
+        print("=== Running Demo 2 Mode ===")
         layout_choices = "012345678"
         #layout_choices = "0123"
         n = len(layout_choices)
@@ -358,38 +355,33 @@ def main():
 
         stats = dict()
 
-        processes = []
-        process_queue = Queue()
-        layout_count = 1
-        for layout in all_permutations:
-            processes.append(Process(target=run_demo2mp, args=(layout, layout_count, all_permutations_count, process_queue), maxtasksperchild=100))
-            layout_count = layout_count + 1
-    
-        for p in processes:
-            p.start()
-        
-        for p in processes:
-            p.join()
+        process_pool = Pool(processes=mp.cpu_count())
+        process_results = [process_pool.apply_async(run_demo2mp, args=(layout,)) for layout in all_permutations]
 
-
-    elif args.demo3:
-        layout = "1,2,7,6,5,3,8,0,4" # 17 
-        
-        ps = []
         start_time = time.time()
-        for x in range(8):
-            #ps.append(Process(target=bfs, args=(Node(GameBoard(layout), None),)))
-            p = Process(target=bfs, args=(Node(GameBoard(layout), None),))
-            p.start()
-            p.join()
-        '''
-        for p in ps:
-            p.start()
+        count = 1
+        for p in process_results:
+            number_of_moves = p.get()
+            if number_of_moves in stats:
+                stats[number_of_moves] = stats[number_of_moves] + 1
+            else:
+                stats[number_of_moves] = 1.0
 
-        for p in ps:
-            p.join()
-        '''
-        print("Time Elapsed: " + str(time.time() - start_time))
+            percent_done = int(round(100.0 * count / all_permutations_count))
+            scale = 4
+            bars_to_draw = int((percent_done / 10) * scale)
+            spaces_to_draw = (10 * scale) - bars_to_draw
+
+            time_left = ((time.time() - start_time) / count) * (all_permutations_count - count)
+
+            print("\r" + "[" + str(time_left) + "]  " + "[" + str(count) + " of " + str(all_permutations_count) + "]  " + str(percent_done) + "%  [" + ("=" * bars_to_draw) + (' ' * spaces_to_draw) + "]    ", end='')
+            count = count + 1
+        
+        # Print the statistics
+        print("=== Statistics ===")
+        for key in stats:
+            print(str(key) + " moves: " + str(int(stats[key] / all_permutations_count * 100)) + "%")
+
 
 
     elif args.benchmark:
@@ -414,9 +406,10 @@ def main():
 
     elif args.benchmarkmp:
         print("=== Running BenchmarkMP ===")
+        print("Utilizing " + str(mp.cpu_count()) + " parallel processes.")
         #layout = "2,7,1,5,4,3,8,6," # Takes 30 moves to solve
         layout = "0,5,7,1,6,4,8,2,3" # Takes 20 moves to solve
-        runs = 64
+        runs = 20
 
         layout_list = []
         for x in range(runs):
